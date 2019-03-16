@@ -737,9 +737,14 @@ class LocalNodeController(NodeController):
             ]
         p = launch_process(cmdline)
         if self.waitOnLaunch():
-            # this requires that RunAsDaemon is set
-            (stdouterr, empty_stderr) = p.communicate()
-            debug(stdouterr)
+            stdouterr = ""
+            while True:
+                nextline = p.stdout.readline()
+                if nextline == '' and p.poll() is not None:
+                    break
+                stdouterr += nextline
+                debug(nextline)
+                empty_stderr = p.communicate()[1][:-1]
             assert empty_stderr is None
         else:
             # this does not require RunAsDaemon to be set, but is slower.
